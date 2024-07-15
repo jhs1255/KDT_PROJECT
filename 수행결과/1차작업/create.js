@@ -23,6 +23,8 @@ let paddleX = (canvas.width - paddleWidth) / 2; //바가 중앙으로 오도록 
 let rightPressed = false;
 let leftPressed = false;
 
+let isBallReleased = false; // 발사 상태 변수
+
 //키보드 조작
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
@@ -49,17 +51,17 @@ function keyUpHandler(e) {
 /*-----------------------------------------------게임 요소 생성-----------------------------------------------*/
 
 //공 그리기
-drawBall();
 function drawBall() {
     ctx.beginPath();
     ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
-    ctx.fillStyle = "#0095DD";
+    ctx.fillStyle = "blue";
     ctx.fill();
     ctx.closePath();
 }
 
+
+
 //바 그리기
-drawPaddle();
 function drawPaddle() {
     ctx.beginPath();
     ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
@@ -67,9 +69,6 @@ function drawPaddle() {
     ctx.fill();
     ctx.closePath();
 }
-
-/*--------------------------------------------스와이프 공 생성------------------------------------*/
-
 
 
 /*--------------------------------------------벽돌 생성-------------------------------------------*/
@@ -103,7 +102,6 @@ function collider() {
     }
 }
 //-------------------------벽돌 그리기-----------------------
-drawBricks();
 function drawBricks() {
     for(var c=0; c<brickColumnCount; c++) {
         for(var r=0; r<brickRowCount; r++) {
@@ -160,12 +158,94 @@ function draw() {
     y += dy;
 }
 
+/*--------------------------------------------스와이프 공 생성------------------------------------*/
+let aimX = x;
+let aimY = y;
+let isAiming = false;
+
+document.addEventListener('mousedown',function(){
+    if(!isBallReleased){
+        isAiming = true;
+        document.addEventListener('mousemove', drawline);
+    }
+});
+
+document.addEventListener('mouseup', function(){
+    if(!isBallReleased){
+        document.removeEventListener('mousemove', drawline);
+        isAiming = false;
+
+        const mouseX = aimX;
+        const mouseY = aimY;
+        const directionX = mouseX - x;
+        const directionY = mouseY - y;
+        const length = Math.sqrt(directionX * directionX + directionY * directionY);
+        dx = directionX / length * 5; // 발사 속도
+        dy = directionY / length * 5;//발사 속도
+
+        //게임 시작
+        intervalid = setInterval(draw,10);
+        document.querySelector("#start").disabled = true;
+
+        //발사 상태 설정
+        isBallReleased = true;
+    }
+});
+
+//조준선 그리기
+function drawline(event) {
+    const mouseX = event.clientX - canvas.getBoundingClientRect().left;
+    const mouseY = event.clientY - canvas.getBoundingClientRect().top;
+  
+    let directionX = mouseX - x;
+    let directionY = mouseY - y;
+    const length = Math.sqrt(directionX * directionX + directionY * directionY);
+    directionX /= length;
+    directionY /= length;
+  
+    let collisionX = x;
+    let collisionY = y;
+    while (true) {
+      collisionX += directionX * 5;
+      collisionY += directionY * 5;
+  
+      if (collisionX < 0 || collisionX > canvas.width || collisionY < 0 || collisionY > canvas.height) {
+        aimX = collisionX;
+        aimY = collisionY;
+        break;
+      }
+  
+      for (let c = 0; c < brickColumnCount; c++) {
+        for (let r = 0; r < brickRowCount; r++) {
+          const b = bricks[c][r];
+          if (b.status === 1) {
+            if (collisionX > b.x && collisionX < b.x + brickWidth && collisionY > b.y && collisionY < b.y + brickHeight) {
+              aimX = b.x + brickWidth / 2;
+              aimY = b.y + brickHeight / 2;
+              break;
+            }
+          }
+        }
+      }
+    }
+  
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBall();
+    drawPaddle();
+    drawBricks();
+  
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(aimX, aimY);
+    ctx.strokeStyle = 'red';
+    ctx.stroke();
+    ctx.closePath();
+  }
+
+/*-----------------------------------------------------------------------------------------------*/
 
 //버튼 동작시 실행
-function start(){
-    setInterval(draw,10);
-    this.disabled = true;
-}
 
 document.querySelector("#start").addEventListener("click",function(){
     intervalid =  setInterval(draw,10);
@@ -176,3 +256,5 @@ document.querySelector("#stop").addEventListener("click",function(){
     document.location.reload();
     clearInterval(intervalid);
 });
+
+draw();
