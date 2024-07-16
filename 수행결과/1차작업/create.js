@@ -1,21 +1,55 @@
 /*------------------------------------변수 선언---------------------------------------*/
 const canvas = document.querySelector('#canvas');
 const ctx = canvas.getContext("2d");
+const ctxBrick = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+function init() {
+    // ballRadius = canvas.width / 100;
+    x = x / canvas.width *  window.innerWidth;
+    paddleX = paddleX / canvas.width *  window.innerWidth;
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    paddleWidth = canvas.width / 5;
+
+    brickRowCount = stages[currentStage].brickRowCount; //벽돌 가로 개수
+    brickColumnCount = stages[currentStage].brickColumnCount; // 벽돌 세로 개수
+    brickWidth = canvas.width/ (brickColumnCount+1); // 벽돌 1개의 가로 길이
+    brickHeight = 20; // 벽돌 1개의 세로 길이
+    brickPadding = 0; //벽돌 간 간격
+    brickOffsetTop = 5; // 벽돌과 화면 상단 사이의 간격 
+    brickOffsetLeft = (canvas.width - (((brickPadding + brickWidth) * (brickColumnCount - 1)) + brickWidth)) / 2; // 벽돌과 화면 좌측 사이의 간격
+    
+    drawBall();
+    drawPaddle();
+    drawBricks();
+}
+
+window.onload = function () {
+    init();
+}
+window.onresize = function () {
+    init();
+}
 
 //위치 조정
 var x = canvas.width / 2;
 var y = canvas.height -20;
 
 //공 속도 조정
-let dx = 3;
-let dy = -3;
+let dx = canvas.width / 300;
+let dy = -canvas.width / 300;
 
 //공 크기 조정
-const ballRadius = 10;
+let ballRadius = canvas.width / 100;
 
 //바 크기 조정
 const paddleHeight = 10; // 바의 세로 길이
-const paddleWidth = 150; //바의 가로 길이
+let paddleWidth = canvas.width / 5; //바의 가로 길이
 let paddleX = (canvas.width - paddleWidth) / 2; //바가 중앙으로 오도록 조정
 
 
@@ -72,26 +106,26 @@ function drawPaddle() {
 
 
 /*--------------------------------------------벽돌 생성-------------------------------------------*/
-var brickRowCount = 13; //벽돌 가로 개수
-var brickColumnCount = 10; // 벽돌 세로 개수
-var brickWidth = 75; // 벽돌 1개의 가로 길이
-var brickHeight = 20; // 벽돌 1개의 세로 길이
-var brickPadding = 12.5; //벽돌 간 간격
-var brickOffsetTop = 50; // 벽돌과 화면 상단 사이의 간격 
-var brickOffsetLeft = 30; // 벽돌과 화면 좌측 사이의 간격
+var brickRowCount = stages[currentStage].brickRowCount; //벽돌 가로 개수
+var brickColumnCount = stages[currentStage].brickColumnCount; // 벽돌 세로 개수
+var brickWidth; // 벽돌 1개의 가로 길이
+var brickHeight; // 벽돌 1개의 세로 길이
+var brickPadding; //벽돌 간 간격
+var brickOffsetTop; // 벽돌과 화면 상단 사이의 간격 
+var brickOffsetLeft; // 벽돌과 화면 좌측 사이의 간격
 
 var bricks = [];
-for (let c = 0; c < brickColumnCount; c++) {
-  bricks[c] = [];
-  for (let r = 0; r < brickRowCount; r++) {
-    bricks[c][r] = { x: 0, y: 0,status:1};
-  }
+for (let r = 0; r < brickRowCount; r++) {
+    bricks[r] = [];
+    for (let c = 0; c < brickColumnCount; c++) {
+        bricks[r][c] = { x: 0, y: 0, status:stages[currentStage].board[r][c]};
+    }
 }
 
 function collider() {
-    for(var c=0; c<brickColumnCount; c++) {
-        for(var r=0; r<brickRowCount; r++) {
-            var b = bricks[c][r];
+    for(var r=0; r<brickRowCount; r++) {
+        for(var c=0; c<brickColumnCount; c++) {
+            var b = bricks[r][c];
             if(b.status == 1) {
                 if(x > b.x && x < b.x+brickWidth && y > b.y && y < b.y+brickHeight) {
                     dy = -dy;
@@ -103,18 +137,21 @@ function collider() {
 }
 //-------------------------벽돌 그리기-----------------------
 function drawBricks() {
-    for(var c=0; c<brickColumnCount; c++) {
-        for(var r=0; r<brickRowCount; r++) {
-            if(bricks[c][r].status === 1) {
-                var brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
-                var brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
-                bricks[c][r].x = brickX;
-                bricks[c][r].y = brickY;
-                ctx.beginPath();
-                ctx.rect(brickX, brickY, brickWidth, brickHeight);
-                ctx.fillStyle = "#352461";
-                ctx.fill();
-                ctx.closePath();
+    for(var r=0; r<brickRowCount; r++) {
+        for(var c=0; c<brickColumnCount; c++) {
+            if(bricks[r][c].status === 1) {
+                var brickX = (c*(brickWidth+brickPadding))+brickOffsetLeft;
+                var brickY = (r*(brickHeight+brickPadding))+brickOffsetTop;
+                bricks[r][c].x = brickX;
+                bricks[r][c].y = brickY;
+                ctxBrick.beginPath();
+                ctxBrick.rect(brickX, brickY, brickWidth, brickHeight);
+                ctxBrick.fillStyle = "#352461";
+                ctxBrick.fill();
+                ctxBrick.closePath();
+                ctxBrick.setLineDash([0,0]);
+                ctxBrick.strokeStyle = "orange";
+                ctxBrick.stroke();
             }
         }
     }
@@ -148,10 +185,10 @@ function draw() {
     }
 
     if(rightPressed && paddleX < canvas.width-paddleWidth) {
-        paddleX += 5;
+        paddleX += canvas.width / 150;
     }
     else if(leftPressed && paddleX > 0) {
-        paddleX -= 5;
+        paddleX -= canvas.width / 150;
     }
 
     x += dx;
@@ -215,9 +252,9 @@ function drawline(event) {
         break;
       }
   
+      for (let r = 0; r < brickRowCount; r++) {
       for (let c = 0; c < brickColumnCount; c++) {
-        for (let r = 0; r < brickRowCount; r++) {
-          const b = bricks[c][r];
+          const b = bricks[r][c];
           if (b.status === 1) {
             if (collisionX > b.x && collisionX < b.x + brickWidth && collisionY > b.y && collisionY < b.y + brickHeight) {
               aimX = b.x + brickWidth / 2;
