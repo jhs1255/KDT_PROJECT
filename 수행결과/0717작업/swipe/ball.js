@@ -16,6 +16,17 @@ const ballRadius = 10;
 
 //공이 떨어진 횟수
 let ballCount = 0;
+//목숨
+function lifeDisplay(){
+    const lifes = [document.querySelector('#life1'),document.querySelector('#life2'),document.querySelector('#life3')];
+    lifes.forEach((life, index) => {
+        if(index < ballCount){
+            life.style.display = 'none';
+        }else{
+            life.style.display = 'inline-block';
+        }
+    });
+}
 
 let intervalid;
 
@@ -53,6 +64,7 @@ function resetBall() {
     dx = 3;
     dy = -3;
     paddleX = (canvas.width - paddleWidth) / 2;
+    lifeDisplay();
 }
 
 
