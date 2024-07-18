@@ -56,7 +56,8 @@ function itemimpact(item){
         // 바 길이 증가
         paddleWidth += 20;
     } else if (item.type === 'jump') {
-        
+        //다음 스테이지로 바로 넘어가기
+        jumpItemEffect(); 
     } else if (item.type === 'plusheart') {
         
     } else if (item.type === 'speed') {
@@ -78,4 +79,17 @@ function drawItemsFalling() {
     }
 }
 
- 
+function jumpItemEffect() {
+    // 모든 활성화된 벽돌 제거
+    for (var c = 0; c < brickColumnCount; c++) {
+        for (var r = 0; r < brickRowCount; r++) {
+            if (stages[currentStage].board[r][c] === 1 && bricks[c][r].status === 1 && bricks[c][r].type == 'brick' ) {
+                bricks[c][r].status = 0;
+            }
+        }
+    }
+    
+    // 다음 스테이지로 이동
+    alert('다음 스테이지로');
+    nextstage();
+}
