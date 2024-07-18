@@ -232,8 +232,8 @@ function drawBricks() {
                 ctx.beginPath();
                 ctx.rect(brickX, brickY, brickWidth, brickHeight);
                 ctx.strokeRect(brickX, brickY, brickWidth, brickHeight);
-                ctx.strokeStyle = 'orange';
-                ctx.fillStyle = "#352461";
+                ctx.strokeStyle = 'black';
+                ctx.fillStyle = "white";
                 ctx.fill();
                 ctx.closePath();
 
