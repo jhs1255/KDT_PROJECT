@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swipe-break-block</title>
+    <link type="text/css" rel="stylesheet" href="./swipe.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <style>
+        body, html {
+        height: 100%;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: black;
+        color: white;
+        font-family: 'Press Start 2P', cursive;   
+        }   
+        .container{width: 100%; height: 650px;}
+        .infomation{float: right; width: 20%; height: 560px; border: 1px solid white;}
+        .game{width: 80%;}
+        /* .menu{width: 100%; height: 50%; border: 1px solid white; text-align: center;} */
+        .score{width: 100%; height: 50%; border: 1px solid blue; }
+        .btn{height: 100%; font-weight: bold; line-height: 20px;}
+        #canvas{border: 1px solid white; float: left; width: 100%; background-color: black;}
+        
+        .button-group {
+            margin-top: 30px;
+            width: 100%;
+        }
+        .button-group button {
+            margin: 10px 0;
+            width: 100%;
+            padding: 10px;
+            font-size: 1.2em;
+            background-color: #333;
+            color: yellow;
+            border: 2px solid yellow;
+            border-radius: 10px;
+            outline: none;
+        }
+        .button-group button:hover, .button-group button.active {
+            background-color: yellow;
+            color: black;
+        }
+        .title {
+            font-size: 2.5em;
+            color: red;
+            margin-bottom: 20px;
+        }
+                /* 모달 스타일 */
+        .modal-content {
+            background-color: black;
+            color: white;
+            border: 2px solid yellow;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .modal-header {
+            border-bottom: none;
+        }
+        .modal-title {
+            font-size: 2em;
+            color: red;
+        }
+        .modal-body button {
+            margin: 10px 0;
+            width: 100%;
+            padding: 10px;
+            font-size: 1.2em;
+            background-color: #333;
+            color: yellow;
+            border: 2px solid yellow;
+            border-radius: 10px;
+            outline: none;
+        }
+        .modal-body button:hover {
+            background-color: yellow;
+            color: black;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="canvas">
+        <div class="title">Break Block</div>
+        <!--버튼 부분-->
+        <div id="nav" class="infomation">
+            <div class="menu button-group">
+                <button id="start">START</button>
+                <button id="stop">STOP</button>
+                <button id="home">Home</button>
+            </div>
+            <div class="score">
+                <div class="life">
+                    <p>남은 생명</p>
+                    <img src="./image/heart.png" alt="heart" width="50px" height="50px" id="life1">
+                    <img src="./image/heart.png" alt="heart" width="50px" height="50px" id="life2">
+                    <img src="./image/heart.png" alt="heart" width="50px" height="50px" id="life3">
+                </div>
+                <!-- ★ 점수 출력 부분 추가.-->
+                <p class="mt-3 mb-3 pt-3 pb-3 border-top border-bottom text-light text-center"
+                    style="overflow: auto; text-overflow: clip;">score:
+                    <!-- 실질적인 점수 출력 부분. id=score -->
+                    <span id="score">0</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Modal -->
+    <div class="modal fade" id="pauseModal" tabindex="-1" aria-labelledby="pauseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="pauseModalLabel">게임 일시정지</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <button type="button" class="btn w-100 mb-3" id="resumeButton" data-bs-dismiss="modal">계속하기</button>
+              <button type="button" class="btn w-100 mb-3" id="settingsButton">설정</button>
+              <button type="button" class="btn w-100" id="homeButton">홈화면으로 돌아가기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+        <!--게임 실행 부분-->
+        <div class="game">
+            <canvas id="canvas" width="1200" height="700"></canvas>
+            
+            <!-- ★ 현재 ball.js는 stage.js보다 뒤에 있어야 함..-->
+            <script src="./control.js"></script>
+            <script src="./stage.js"></script>
+            <script src="./ball.js"></script>
+            <script src="./UI.js"></script>
+            <!-- ★ score.js 추가.-->
+            <script src="./score.js"></script>
+        </div>
+    </div>
+</body>
+</html>
