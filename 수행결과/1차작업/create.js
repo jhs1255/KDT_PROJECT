@@ -7,8 +7,8 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 function init() {
-    // ballRadius = canvas.width / 100;
-    x = x / canvas.width *  window.innerWidth;
+    // ball.radius = canvas.width / 100;
+    ball.posX = ball.posX / canvas.width *  window.innerWidth;
     paddleX = paddleX / canvas.width *  window.innerWidth;
     
     canvas.width = window.innerWidth;
@@ -18,7 +18,7 @@ function init() {
 
     brickRowCount = stages[currentStage].brickRowCount; //벽돌 가로 개수
     brickColumnCount = stages[currentStage].brickColumnCount; // 벽돌 세로 개수
-    brickWidth = canvas.width/ (brickColumnCount+1); // 벽돌 1개의 가로 길이
+    brickWidth = Math.floor(canvas.width / (brickColumnCount+1) + 0.5) ; // 벽돌 1개의 가로 길이
     brickHeight = 20; // 벽돌 1개의 세로 길이
     brickPadding = 0; //벽돌 간 간격
     brickOffsetTop = 5; // 벽돌과 화면 상단 사이의 간격 
@@ -30,22 +30,39 @@ function init() {
 }
 
 window.onload = function () {
+    initBall();
     init();
 }
 window.onresize = function () {
+    initBall();
     init();
 }
 
-//위치 조정
-var x = canvas.width / 2;
-var y = canvas.height -20;
+let ball = {
+    posX: 0,
+    posY: 0,
+    speedX: 0,
+    speedY: 0,
+    speed: 0,
+    radius: Math.round(canvas.width / 100),
+}
 
-//공 속도 조정
-let dx = canvas.width / 300;
-let dy = -canvas.width / 300;
+function initBall() {
+    //위치 조정
+    ball.posX = canvas.width / 2;
+    ball.posY = canvas.height -20;
+    
+    //공 속도 조정
+    ball.speedX = 0 ;//canvas.width / 300;
+    ball.speedY = 1 ;//-canvas.width / 300;
 
-//공 크기 조정
-let ballRadius = canvas.width / 100;
+    ball.speed = 4;
+
+    //공 크기 조정
+    ball.radius = Math.round(canvas.width / 100);
+
+    console.log(ball);
+}
 
 //바 크기 조정
 const paddleHeight = 10; // 바의 세로 길이
@@ -87,7 +104,7 @@ function keyUpHandler(e) {
 //공 그리기
 function drawBall() {
     ctx.beginPath();
-    ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+    ctx.arc(ball.posX, ball.posY, ball.radius, 0, Math.PI * 2);
     ctx.fillStyle = "blue";
     ctx.fill();
     ctx.closePath();
@@ -122,19 +139,159 @@ for (let r = 0; r < brickRowCount; r++) {
     }
 }
 
+// 공과 벽돌 충돌시 처리하는 함수.
 function collider() {
     for(var r=0; r<brickRowCount; r++) {
         for(var c=0; c<brickColumnCount; c++) {
             var b = bricks[r][c];
             if(b.status == 1) {
-                if(x > b.x && x < b.x+brickWidth && y > b.y && y < b.y+brickHeight) {
-                    dy = -dy;
-                    b.status = 0;
+                // 공이 벽돌에 충돌한 경우, 
+                if (collideBrick(b) === true) {
+                    b.status = 0;   // 상태를 0으로 하여, 해당 벽돌을 파괴한다.
                 }
             }
         }
     }
 }
+
+// 공이 벽돌에 충돌했는지 감지하는 함수. 충돌 시 true 리턴.
+function collideBrick(brick) {
+    let brickHalfWidth = brickWidth/2;
+    let brickHalfHeight = brickHeight/2;
+
+    let distX = Math.abs(ball.posX - (brick.x + brickHalfWidth));
+    let distY = Math.abs(ball.posY - (brick.y + brickHalfHeight));
+
+    // 충돌 X 경우,
+    if (distX > (brickHalfWidth + ball.radius) || distY > (brickHalfHeight + ball.radius)) {
+        return false;
+    }
+    
+    // 벽면에 충돌한 경우,
+    let isReflected = false;
+    if (distX <= brickHalfWidth || distY <= brickHalfHeight) {
+        let direction = getCollisionDirection(brick);
+        
+        if (direction == "left") {
+            if (ball.speedX > 0) {
+                ball.speedX = -ball.speedX;
+                console.log("left");
+                isReflected = true;
+            }
+        }
+        else if (direction == "right") {
+            if (ball.speedX < 0) {
+                ball.speedX = -ball.speedX;
+                console.log("right");
+                isReflected = true;
+            }
+        }
+        else if (direction == "top") {
+            if (ball.speedY > 0) {
+                ball.speedY = -ball.speedY;
+                console.log("top");
+                isReflected = true;
+            }
+        }
+        else if (direction == "bottom") {
+            if (ball.speedY < 0) {
+                ball.speedY = -ball.speedY;
+                console.log("bottom");
+                isReflected = true;
+            }
+        }
+    }
+    if (isReflected === true) {
+        return true;
+    }
+
+    let dx = distX - brickHalfWidth;
+    let dy = distY - brickHalfHeight;
+    // 모서리에 충돌한 경우,
+    if (dx*dx+dy*dy<=(ball.radius*ball.radius)) {
+        // 원이 벽돌에 닿은 경우,
+        reflectBall(brick);
+        console.log("edge true");
+        return true;
+    } else {
+        // 원이 벽돌에 닿지 않는 경우,
+        console.log("edge false");
+        return false;
+    }
+}
+
+// 벽돌의 충돌 방향 구하는 함수.
+function getCollisionDirection(brick) {
+
+    let brickHalfWidth = brickWidth/2;
+    let brickHalfHeight = brickHeight/2;
+
+    let dx = (ball.posX - (brick.x + brickHalfWidth)) / (brickHalfWidth);
+    let dy = (ball.posY - (brick.y + brickHalfHeight)) / (brickHalfHeight);
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0) {
+            return "left";
+        } else {
+            return "right";
+        }
+    } else {
+        if (dy < 0) {
+            return "top";
+        } else {
+            return "bottom";
+        }
+    }
+}
+
+// 충돌 지점이 모서리일 때, 반사시키는 함수.
+function reflectBall(brick) {
+    // 충돌 당시의 직사각형의 중심과 원의 중심 사이의 거리.
+    let distX = ball.posX - (brick.x + brickWidth/2);
+    let distY = ball.posY - (brick.y + brickHeight/2);
+    var distance = Math.sqrt(distX * distX + distY * distY);
+
+    // 충돌 지점에서 직사각형의 중심까지의 단위 벡터.
+    var unitX = distX / distance;
+    var unitY = distY / distance;
+
+    // 현재 공의 속도.
+    var velocityX = ball.speedX;
+    var velocityY = ball.speedY;
+
+    // 충돌 시 반사 벡터 계산.
+    var dotProduct = unitX * velocityX + unitY * velocityY;
+    var reflectX = velocityX - 2 * dotProduct * unitX;
+    var reflectY = velocityY - 2 * dotProduct * unitY;
+
+    // 반사된 속도를 원의 속도에 반영
+    ball.speedX = reflectX;
+    ball.speedY = reflectY;
+}
+
+// 현재 공의 속도(방향)을 통해 공의 각도를 구하는 함수.
+function convertVectorToDegree(x, y) {
+    const radian = Math.atan2(y,x);
+    const degree = radian * (180 / Math.PI);
+
+    //// console.log(`convertVectorToDegree - radian: ${radian}`);
+    //// console.log(`convertVectorToDegree - degree: ${degree}`);
+
+    return {"radian": radian, "degree": degree};
+}
+// 현재 공의 각도를 통해 공의 방향(단위 벡터)을 구하는 함수.
+function convertDegreeToVector(degree) {
+    const radian = degree * (Math.PI / 180);
+
+    const x = Math.cos(radian);
+    const y = Math.sin(radian);
+
+    //// console.log(`convertDegreeToVector -radian: ${radian}`);
+    //// console.log(`convertDegreeToVector -vector x: ${x} y: ${y}`);
+    
+    return {"x": x, "y": y};
+}
+
 //-------------------------벽돌 그리기-----------------------
 function drawBricks() {
     for(var r=0; r<brickRowCount; r++) {
@@ -166,17 +323,27 @@ function draw() {
     drawBricks();
     collider();
 
-    //충돌 감지
-    if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
-        dx = -dx; //좌우 충돌 감지
+    //충돌 감지 // 벽 좌우단
+    if (ball.posX + ball.speedX > canvas.width - ball.radius || ball.posX + ball.speedX < ball.radius) {
+        ball.speedX = -ball.speedX; //좌우 충돌 감지
     }
-
-    if(y + dy < ballRadius) {
-        dy = -dy; //상하 충돌 감지
+    // 천장
+    if(ball.posY + ball.speedY < ball.radius) {
+        ball.speedY = -ball.speedY; //상하 충돌 감지
     }
-    else if(y + dy > canvas.height-ballRadius) {  
-        if(x > paddleX && x < paddleX + paddleWidth) {//공이 바 가장자리에 닿았는지 확인
-            dy = -dy;
+    // 바닥
+    else if(ball.posY + ball.speedY > canvas.height - ball.radius) {
+        //공이 바 가장자리에 닿았는지 확인
+        if(ball.posX > paddleX && ball.posX < paddleX + paddleWidth) {
+            // 공을 반사할 각도. // (10′~170′ 인데 y축이 반전이므로 + 180해줌).
+            let degree = Math.floor((Math.random() * 1000) % 160 + 10) + 180;
+            // 반사할 각도를 단위 벡터로 변환.
+            let vector = convertDegreeToVector(degree);
+            
+            // 반사 방향에 공의 속도를 곱해줌.
+            ball.speedX = vector.x * ball.speed;
+            ball.speedY = vector.y * ball.speed;
+            // console.log(`ball.speed: ${ball.speedX}, ${ball.speedY}`);
         }
         else { // 공이 바닥에 떨어지면 게임 정지
             clearInterval(intervalid);
@@ -191,13 +358,13 @@ function draw() {
         paddleX -= canvas.width / 150;
     }
 
-    x += dx;
-    y += dy;
+    ball.posX += ball.speedX;
+    ball.posY += ball.speedY;
 }
 
 /*--------------------------------------------스와이프 공 생성------------------------------------*/
-let aimX = x;
-let aimY = y;
+let aimX = ball.posX;
+let aimY = ball.posY;
 let isAiming = false;
 
 document.addEventListener('mousedown',function(){
@@ -214,12 +381,13 @@ document.addEventListener('mouseup', function(){
 
         const mouseX = aimX;
         const mouseY = aimY;
-        const directionX = mouseX - x;
-        const directionY = mouseY - y;
+        const directionX = mouseX - ball.posX;
+        const directionY = mouseY - ball.posY;
         const length = Math.sqrt(directionX * directionX + directionY * directionY);
-        dx = directionX / length * 5; // 발사 속도
-        dy = directionY / length * 5;//발사 속도
+        ball.speedX = directionX / length * ball.speed; // 발사 x축 속도
+        ball.speedY = directionY / length * ball.speed; // 발사 y축 속도
 
+        // console.warn(`---spdX=${ball.speedX}, spdY=${ball.speedY}`);
         //게임 시작
         intervalid = setInterval(draw,10);
         document.querySelector("#start").disabled = true;
@@ -234,14 +402,14 @@ function drawline(event) {
     const mouseX = event.clientX - canvas.getBoundingClientRect().left;
     const mouseY = event.clientY - canvas.getBoundingClientRect().top;
   
-    let directionX = mouseX - x;
-    let directionY = mouseY - y;
+    let directionX = mouseX - ball.posX;
+    let directionY = mouseY - ball.posY;
     const length = Math.sqrt(directionX * directionX + directionY * directionY);
     directionX /= length;
     directionY /= length;
   
-    let collisionX = x;
-    let collisionY = y;
+    let collisionX = ball.posX;
+    let collisionY = ball.posY;
     while (true) {
       collisionX += directionX * 5;
       collisionY += directionY * 5;
@@ -273,7 +441,7 @@ function drawline(event) {
   
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
-    ctx.moveTo(x, y);
+    ctx.moveTo(ball.posX, ball.posY);
     ctx.lineTo(aimX, aimY);
     ctx.strokeStyle = 'red';
     ctx.stroke();
