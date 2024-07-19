@@ -85,7 +85,7 @@ document.getElementById("restartButton").addEventListener("click", ()=>{
     document.location.reload(); // 페이지 새로고침
 });
 document.getElementById("homeButtonGameOver").addEventListener("click", () => {
-    location.href = 'index.html';
+    location.href = 'title.html';
 });
 
 // 설정 모달창 저장 버튼
