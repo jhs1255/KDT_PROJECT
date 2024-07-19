@@ -78,6 +78,8 @@ function saveScore(initials, score) {
     
     // 로컬 스토리지에 점수 리스트 저장
     localStorage.setItem('scores', JSON.stringify(scores));
+
+    displayHighscore(); // hightscore로 점수 넘겨주기
 }
 
 document.getElementById("saveInitialsButton").addEventListener("click", saveInitials);
