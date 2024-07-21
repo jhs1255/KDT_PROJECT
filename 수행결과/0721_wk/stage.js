@@ -311,10 +311,10 @@ function convertDegreeToVector(degree) {
     return {"x": x, "y": y};
 }
 
-function clearBrick(){
-    for (var c = 0; c < brickColumnCount; c++) {
-        for (var r = 0; r < brickRowCount; r++) {
-            if (bricks[c][r].status == 1) {
+function clearBrick(){ //r,c 변경함
+    for (var r = 0; r < brickRowCount; r++) {
+        for (var c = 0; c < brickColumnCount; c++) {
+            if (bricks[r][c].status == 1) { 
                 return false;
             }
         }
